@@ -15,7 +15,20 @@ logging synchronous
 exit
 service password-encryption
 banner motd $ Authorized Access Only! $
+ipv6 unicast-routing
 exit
+"""
+
+CONFIG_ROUTER_PORT = """
+interface {intf}
+ip address {ipv4} {subnet_mask}
+ipv6 address {ipv6}
+{additional}
+no shutdown
+"""
+
+DCE = """
+clock rate 128000
 """
 
 SWITCH_SVI_SSH = """
@@ -148,6 +161,30 @@ ipv6 address {ipv6}
 """
 
 CONFIG_IPV6_LINK_LOCAL = """
-int {port}.{vlan}
-ipv6 address FE80::1 link-local
+ipv6 address {addr} link-local
 """
+
+CONFIG_IPV6_LINK_LOCAL_VLAN = """
+int {port}.{vlan}
+""" + CONFIG_IPV6_LINK_LOCAL.format(addr="FE80::1")
+
+STATIC_ROUTES = {
+    "IPV4_NEXT_HOP": """
+ip route {net_addr} {subnet_mask} {next_hop} {ad}
+""",
+    "IPV4_DIRECTLY_CONNECTED": """
+ip route {net_addr} {subnet_mask} {intf} {ad}
+""",
+    "IPV4_FULLY_SPECIFIED": """
+ip route {net_addr} {subnet_mask} {intf} {next_hop} {ad}
+""",
+    "IPV6_NEXT_HOP": """
+ipv6 route {net_addr} {next_hop} {ad}
+""",
+    "IPV6_DIRECTLY_CONNECTED": """
+ipv6 route {net_addr} {intf} {ad}
+""",
+    "IPV6_FULLY_SPECIFIED": """
+ipv6 route {net_addr} {intf} {next_hop} {ad}
+""",
+}

@@ -16,7 +16,7 @@ class Vlan:
         return CONFIG_IPV6_BLOCK.format(port=self.router_port, vlan=self.number, ipv6=self.ipv6_gateway) if self.ipv6_gateway is not None else ""
 
     def provision_ipv6_link_local(self) -> str:
-        return CONFIG_IPV6_LINK_LOCAL.format(port=self.router_port, vlan=self.number)
+        return CONFIG_IPV6_LINK_LOCAL_VLAN.format(port=self.router_port, vlan=self.number)
 
 class NativeVlan:
     def __init__(self, number, router_port):

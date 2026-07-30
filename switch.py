@@ -1,19 +1,22 @@
 from functools import reduce
 from templates import *
+from device import Device
+from vlan import Vlan
+from ports import Ports
+from typing import List
 
-class Switch:
-    def __init__(self, hostname, vlan: Vlan, ip, mask_prefix, gw, port_configs: List[Ports]):
-        self.hostname = hostname
+class Switch(Device):
+    def __init__(self, hostname, vlan: Vlan, ip, port_configs: List[Ports]):
+        super().__init__(hostname, 15)
         self.vlan = vlan
         self.ip = ip
-        self.vty_max = 15
         self.port_configs = port_configs
 
     def provision_ssh(self) -> str:
-        return SWITCH_SVI_SSH.format(vlan=self.vlan.number, ip=self.ip, subnet=self.vlan.mask, gateway=self.vlan.gateway, vty_max=self.vty_max)
-
-    def provision_basic_switch(self) -> str:
-        return BASIC_CONFIG.format(host=self.hostname, vty_max=self.vty_max)
+        if self.vlan is not None:
+            return SWITCH_SVI_SSH.format(vlan=self.vlan.number, ip=self.ip, subnet=self.vlan.mask, gateway=self.vlan.gateway, vty_max=self.vty_max)
+        else:
+            return ""
 
     def all_provisioning(self) -> str:
-        return self.provision_basic_switch() + self.provision_ssh() + reduce(lambda a, x: a + x, [p.provision_switch_ports() for p in self.port_configs])
+        return self.provision_basic() + self.provision_ssh() + reduce(lambda a, x: a + x, [p.provision_switch_ports() for p in self.port_configs])
