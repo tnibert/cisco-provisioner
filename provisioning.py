@@ -25,10 +25,12 @@ format_octet_binary = lambda n: '{0:08b}'.format(n)
 devices = {
     "S1": Switch("S1", None, None,
                  [
+                     AccessPorts("f0/5-6", 1),
                      UnusedPorts("f0/1-4,f0/7-24,g0/1-2"),
                  ]),
     "S3": Switch("S3", None, None,
                  [
+                     AccessPorts("f0/5,f0/18", 1),
                      UnusedPorts("f0/1-4,f0/6-17,f0/19-24,g0/1-2"),
                  ]),
     "ISP": Router("ISP",
@@ -39,9 +41,9 @@ devices = {
                    ],
                   [
                       StaticIPv4Route("192.168.0.0", "255.255.254.0", HQ_G01_IPV4, "g0/1"),
-                      StaticIPv6Route("2001:DB8:ACAD::/59", HQ_G01_IPV6, "g0/2"),
+                      StaticIPv6Route("2001:DB8:ACAD::/62", HQ_G01_IPV6, "g0/1"),
                       StaticIPv4Route("192.168.0.0", "255.255.254.0", HQ_G02_IPV4, administrative_distance=80),
-                      StaticIPv6Route("2001:DB8:ACAD::/59", HQ_G02_IPV6, administrative_distance=80),
+                      StaticIPv6Route("2001:DB8:ACAD::/62", HQ_G02_IPV6, administrative_distance=80),
                   ]),
     "BRANCH": Router("BRANCH",
                      [

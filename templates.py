@@ -96,6 +96,7 @@ switchport port-security
 switchport port-security max 1
 switchport port-security mac-address sticky
 switchport port-security violation shutdown
+no shut
 exit
 exit
 """

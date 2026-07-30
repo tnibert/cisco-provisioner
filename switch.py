@@ -18,5 +18,8 @@ class Switch(Device):
         else:
             return ""
 
+    def provision_switch_ports(self):
+        return reduce(lambda a, x: a + x, [p.provision_switch_ports() for p in self.port_configs])
+
     def all_provisioning(self) -> str:
-        return self.provision_basic() + self.provision_ssh() + reduce(lambda a, x: a + x, [p.provision_switch_ports() for p in self.port_configs])
+        return self.provision_basic() + self.provision_ssh() + self.provision_switch_ports()
