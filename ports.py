@@ -1,4 +1,7 @@
 from templates import *
+from vlan import Vlan, NativeVlan
+from typing import List, Union
+from functools import reduce
 
 class Ports:
     """
@@ -18,11 +21,14 @@ class UnusedPorts(Ports):
         return CONFIG_UNUSED_PORTS.format(ports=self.ports)
 
 class TrunkPorts(Ports):
-    def __init__(self, ports):
+    def __init__(self, ports, vlans: List[Union[Vlan|NativeVlan]]):
         super().__init__(ports)
+        self.vlans = vlans
 
     def provision(self) -> str:
-        return CONFIG_TRUNK_PORTS.format(ports=self.ports)
+        return CONFIG_TRUNK_PORTS.format(ports=self.ports,
+                                         allowed=reduce(lambda a,x: a+x,
+                                                        map(lambda t: t.provision_switch_trunk(), self.vlans)))
 
 class AccessPorts(Ports):
     def __init__(self, ports, access_vlan):

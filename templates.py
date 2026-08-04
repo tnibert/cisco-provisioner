@@ -82,11 +82,18 @@ exit
 CONFIG_TRUNK_PORTS = """
 int range {ports}
 switchport mode trunk
-switchport trunk native vlan 1000
-switchport trunk allow vlan 10,20,30,40,50,60,99,100,1000
+{allowed}
 ! secure trunk ports
 switchport nonegotiate
 exit
+"""
+
+CONFIG_TRUNK_NATIVE = """
+switchport trunk native vlan {number}
+"""
+
+CONFIG_TRUNK_REGULAR = """
+switchport trunk allow vlan {number}
 """
 
 CONFIG_UNUSED_PORTS = """
