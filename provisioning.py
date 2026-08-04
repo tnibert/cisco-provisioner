@@ -35,6 +35,7 @@ vlans = {
 
 devices = {
     "S1": Switch("S1", vlans[99], switch_ipv4,
+                 list(vlans.values()),
                  [
                      TrunkPorts("f0/1", [vlans[10], vlans[20], vlans[99], vlans[1000]]),
                      AccessPorts("f0/6,f0/18", 99),

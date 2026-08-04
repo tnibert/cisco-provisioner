@@ -49,3 +49,6 @@ class NativeVlan:
 
     def provision_switch_trunk(self) -> str:
         return CONFIG_TRUNK_NATIVE.format(number=self.number)
+
+    def provision_switch_vlan(self) -> str:
+        return CONFIG_SWITCH_VLAN.format(number=self.number, name="Native")

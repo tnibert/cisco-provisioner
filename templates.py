@@ -33,7 +33,6 @@ clock rate 128000
 """
 
 SWITCH_SVI_SSH = """
-configure terminal
 ! SVI interface
 int vlan {vlan}
 ip address {ip} {subnet}
@@ -51,10 +50,6 @@ transport input ssh
 login local
 exit
 ip ssh version 2
-exit
-
-show ip ssh
-show ssh
 """
 
 CONFIG_SWITCH_VLAN = """
@@ -92,6 +87,7 @@ CONFIG_TRUNK_NATIVE = """
 switchport trunk native vlan {number}
 """
 
+# todo: need to specify multiple in one go
 CONFIG_TRUNK_REGULAR = """
 switchport trunk allow vlan {number}
 """
