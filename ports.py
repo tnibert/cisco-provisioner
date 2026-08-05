@@ -26,9 +26,13 @@ class TrunkPorts(Ports):
         self.vlans = vlans
 
     def provision(self) -> str:
+        regular = reduce(lambda a,x: a+","+x,
+                         map(lambda v: str(v.get_number()), self.vlans))
+        native = reduce(lambda a,x: a+x,
+                        map(lambda v: v.provision_switch_trunk(),
+                            filter(lambda v: isinstance(v, NativeVlan), self.vlans)))
         return CONFIG_TRUNK_PORTS.format(ports=self.ports,
-                                         allowed=reduce(lambda a,x: a+x,
-                                                        map(lambda t: t.provision_switch_trunk(), self.vlans)))
+                                         allowed=CONFIG_TRUNK_REGULAR.format(number=regular) + native)
 
 class AccessPorts(Ports):
     def __init__(self, ports, access_vlan):

@@ -30,8 +30,8 @@ class Vlan:
     def provision_switch_vlan(self) -> str:
         return CONFIG_SWITCH_VLAN.format(number=self.number, name=self.name)
 
-    def provision_switch_trunk(self) -> str:
-        return CONFIG_TRUNK_REGULAR.format(number=self.number)
+    def get_number(self) -> int:
+        return self.number
 
 class NativeVlan:
     def __init__(self, number, router_port):
@@ -52,3 +52,6 @@ class NativeVlan:
 
     def provision_switch_vlan(self) -> str:
         return CONFIG_SWITCH_VLAN.format(number=self.number, name="Native")
+
+    def get_number(self) -> int:
+        return self.number
