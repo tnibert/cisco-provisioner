@@ -6,6 +6,9 @@ from switch import Switch
 from ports import *
 from vlan import Vlan, NativeVlan
 from ip import IPAddress
+from dhcp import DHCPServer, DHCPPool, DHCPRelay
+
+DOMAIN = "cisco.com"
 
 hq_s000_ipv4 = IPAddress("172.16.30.1", 30)
 hq_g00_ipv4 = IPAddress("192.168.100.1", 24)
@@ -19,9 +22,12 @@ vlan_99_gw_ipv4 = IPAddress("192.168.99.1", 24)
 vlan_10_net_ipv4 = IPAddress("192.168.10.0", 24)
 vlan_20_net_ipv4 = IPAddress("192.168.20.0", 24)
 vlan_99_net_ipv4 = IPAddress("192.168.99.0", 24)
+lan_1_net_ipv4 = IPAddress("192.168.100.0", hq_g00_ipv4.get_mask_len())
 
 switch_ipv4 = IPAddress("192.168.99.11", vlan_99_gw_ipv4.get_mask_len())
 default_route_net_ipv4 = IPAddress("0.0.0.0", 0)
+
+dhcp_relay = DHCPRelay(hq_s000_ipv4)
 
 format_octet_binary = lambda n: '{0:08b}'.format(n)
 
@@ -44,7 +50,7 @@ devices = {
                  ]),
     "BRANCH": Router("BRANCH",
                      [
-                         RouterOnAStickPort("g0/0", [vlans[10], vlans[20], vlans[99], vlans[1000]]),
+                         RouterOnAStickPort("g0/0", [vlans[10], vlans[20], vlans[99], vlans[1000]], dhcp_relay),
                          Port("s0/0/0", branch_s000_ipv4, None)
                      ],
                      [
@@ -60,7 +66,28 @@ devices = {
                      StaticIPv4Route(vlan_10_net_ipv4, branch_s000_ipv4),
                      StaticIPv4Route(vlan_20_net_ipv4, branch_s000_ipv4),
                      StaticIPv4Route(vlan_99_net_ipv4, branch_s000_ipv4),
-                 ])
+                 ],
+                 DHCPServer([
+                     hq_g00_ipv4,
+                     IPAddress("192.168.100.2", hq_g00_ipv4.get_mask_len()),
+                     IPAddress("192.168.100.3", hq_g00_ipv4.get_mask_len()),
+                     IPAddress("192.168.100.4", hq_g00_ipv4.get_mask_len()),
+                     IPAddress("192.168.100.5", hq_g00_ipv4.get_mask_len()),
+                     vlan_10_gw_ipv4,
+                     IPAddress("192.168.10.2", vlan_10_gw_ipv4.get_mask_len()),
+                     IPAddress("192.168.10.3", vlan_10_gw_ipv4.get_mask_len()),
+                     IPAddress("192.168.10.4", vlan_10_gw_ipv4.get_mask_len()),
+                     IPAddress("192.168.10.5", vlan_10_gw_ipv4.get_mask_len()),
+                     vlan_20_gw_ipv4,
+                     IPAddress("192.168.20.2", vlan_20_gw_ipv4.get_mask_len()),
+                     IPAddress("192.168.20.3", vlan_20_gw_ipv4.get_mask_len()),
+                     IPAddress("192.168.20.4", vlan_20_gw_ipv4.get_mask_len()),
+                     IPAddress("192.168.20.5", vlan_20_gw_ipv4.get_mask_len())
+                 ], [
+                     DHCPPool("LAN1", lan_1_net_ipv4, hq_g00_ipv4, domain_name=DOMAIN),
+                     DHCPPool("LAN10", vlan_10_net_ipv4, vlan_10_gw_ipv4, domain_name=DOMAIN),
+                     DHCPPool("LAN20", vlan_20_net_ipv4, vlan_20_gw_ipv4, domain_name=DOMAIN),
+                 ]))
 }
 
 if __name__=='__main__':

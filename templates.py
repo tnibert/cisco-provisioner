@@ -93,7 +93,6 @@ CONFIG_TRUNK_NATIVE = """
 switchport trunk native vlan {number}
 """
 
-# todo: need to specify multiple in one go?
 CONFIG_TRUNK_REGULAR = """
 switchport trunk allow vlan {number}
 """
@@ -107,6 +106,7 @@ shut
 exit
 """
 
+# todo: unify with other trunk config and remove hard coded vlans
 CONFIG_ETHERCHANNEL_PORTS = """
 ! etherchannel
 interface range {ports}
@@ -169,3 +169,27 @@ ipv6 route {net_addr} {intf} {ad}
 ipv6 route {net_addr} {intf} {next_hop} {ad}
 """,
 }
+
+# DHCP
+DHCP_V4_EXCLUDE = """
+ip dhcp excluded-address {addr}
+"""
+
+DHCP_V4_POOL_CREATE = """
+ip dhcp pool {pool_name}
+network {net_addr} {mask}
+default-router {gw}
+{additional} 
+"""
+
+DHCP_V4_DNS = """
+dns-server {addr}
+"""
+
+DHCP_V4_DOMAIN_NAME = """
+domain-name {domain}
+"""
+
+DHCP_V4_RELAY = """
+ip helper-address {addr}
+"""

@@ -3,7 +3,7 @@ from ip import IPAddress
 
 class Vlan:
     """
-    todo: a VLAN is a concept that transcends routers and switches
+    todo: a VLAN is a concept that transcends routers and switches, shouldn't provision, should just provide data
     """
     def __init__(self, name: str, number: int, ipv4: IPAddress=None, router_port=None, ipv6: IPAddress=None):
         self.name = name
