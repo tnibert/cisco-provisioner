@@ -57,6 +57,12 @@ vlan {number}
 name {name}
 """
 
+CONFIG_LOOPBACK_IPV4 = """
+interface loopback {number}
+ip address {addr} {mask}
+exit
+"""
+
 CONFIG_ACCESS_PORTS = """
 int range {ports}
 switchport mode access
@@ -87,7 +93,7 @@ CONFIG_TRUNK_NATIVE = """
 switchport trunk native vlan {number}
 """
 
-# todo: need to specify multiple in one go
+# todo: need to specify multiple in one go?
 CONFIG_TRUNK_REGULAR = """
 switchport trunk allow vlan {number}
 """

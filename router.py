@@ -35,8 +35,17 @@ class RouterOnAStickPort:
                       self.vlans)) \
             + CONFIG_ROUTER_ON_A_STICK_CLOSE.format(port=self.intf)
 
+
+class IPv4LoopbackPort:
+    def __init__(self, ip: IPAddress, number: int):
+        self.ip = ip
+        self.number = number
+
+    def provision(self):
+        return CONFIG_LOOPBACK_IPV4.format(number=self.number, addr=self.ip.get_ip_addr(), mask=self.ip.get_mask())
+
 class Router(Device):
-    def __init__(self, hostname: str, ports: List[Union[Port|RouterOnAStickPort]]=None, routes: List[StaticRoute]=None, vlans: List[Vlan]=None):
+    def __init__(self, hostname: str, ports: List[Union[Port|RouterOnAStickPort|IPv4LoopbackPort]]=None, routes: List[StaticRoute]=None, vlans: List[Vlan]=None):
         super().__init__(hostname, 4)
         self.ports = ports if ports is not None else []
         self.routes = routes if routes is not None else []
