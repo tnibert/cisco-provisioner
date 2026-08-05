@@ -27,11 +27,11 @@ class Vlan:
     def provision_ipv6_link_local(self) -> str:
         return CONFIG_IPV6_LINK_LOCAL_VLAN.format(port=self.router_port, vlan=self.number)
 
-    def provision_switch_vlan(self) -> str:
-        return CONFIG_SWITCH_VLAN.format(number=self.number, name=self.name)
-
     def get_number(self) -> int:
         return self.number
+
+    def get_name(self) -> str:
+        return self.name
 
 class NativeVlan:
     def __init__(self, number, router_port):
@@ -50,8 +50,8 @@ class NativeVlan:
     def provision_switch_trunk(self) -> str:
         return CONFIG_TRUNK_NATIVE.format(number=self.number)
 
-    def provision_switch_vlan(self) -> str:
-        return CONFIG_SWITCH_VLAN.format(number=self.number, name="Native")
-
     def get_number(self) -> int:
         return self.number
+
+    def get_name(self) -> str:
+        return "Native"

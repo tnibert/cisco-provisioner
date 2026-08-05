@@ -29,7 +29,7 @@ class Switch(Device):
         return reduce(lambda a, x: a + x, [p.provision() for p in self.port_configs])
 
     def provision_switch_vlans(self):
-        return reduce(lambda a, x: a + x, [v.provision_switch_vlan() for v in self.vlans])
+        return reduce(lambda a, x: a + x, [CONFIG_SWITCH_VLAN.format(number=v.get_number(), name=v.get_name()) for v in self.vlans])
 
     def provision(self) -> str:
         return self.provision_basic() + self.provision_switch_vlans() + self.provision_ssh() + self.provision_switch_ports()
