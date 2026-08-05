@@ -1,5 +1,3 @@
-import sys
-
 from router import Router, Port, RouterOnAStickPort, IPv4LoopbackPort
 from routes import StaticIPv4Route
 from switch import Switch
@@ -29,7 +27,6 @@ default_route_net_ipv4 = IPAddress("0.0.0.0", 0)
 
 dhcp_relay = DHCPRelay(hq_s000_ipv4)
 
-format_octet_binary = lambda n: '{0:08b}'.format(n)
 
 vlans = {
     10: Vlan("Sales", 10, vlan_10_gw_ipv4, "g0/0", dhcp=True),
@@ -89,17 +86,3 @@ devices = {
                      DHCPPool("LAN20", vlan_20_net_ipv4, vlan_20_gw_ipv4, domain_name=DOMAIN),
                  ]))
 }
-
-if __name__=='__main__':
-    """
-    generate provisioning commands
-    """
-    if len(sys.argv) > 1:
-        # provision specific device
-        print(devices[sys.argv[1]].provision())
-    else:
-        # all
-        for k,v in devices.items():
-            config = v.provision()
-            print(f"-----{k}-----")
-            print(config)
