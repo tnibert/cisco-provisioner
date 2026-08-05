@@ -121,7 +121,7 @@ show interfaces port-channel {chan_num}
 show etherchannel summary
 """
 
-CONFIG_ROUTER_ON_A_STICK_CLOSE = """
+PORT_NO_SHUT = """
 int {port}
 no shut
 """
@@ -130,6 +130,7 @@ CONFIG_ROUTER_ON_A_STICK_BLOCK = """
 int {port}.{vlan}
 encapsulation dot1q {vlan}
 ip address {gw} {mask}
+{additional}
 """
 
 CONFIG_NATIVE_ROUTER_ON_A_STICK_BLOCK = """

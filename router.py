@@ -32,13 +32,23 @@ class RouterOnAStickPort:
     def __init__(self, intf: str, vlans: List[Union[Vlan|NativeVlan]], dhcp_relay=None):
         self.intf = intf
         self.vlans = vlans
-        self.dhcp_relay = dhcp_relay    # todo: cleanly add dhcp relay for vlans
+        self.dhcp_relay = dhcp_relay
 
     def provision(self):
+        regular_vlans = filter(lambda v: not isinstance(v, NativeVlan), self.vlans)
+        native_vlans = filter(lambda v: isinstance(v, NativeVlan), self.vlans)
         return reduce(lambda a, x: a + x,
-                      map(lambda v: v.provision_router_on_a_stick(), #+ (self.dhcp_relay.provision() if self.dhcp_relay is not None else ""),
-                      self.vlans)) \
-            + CONFIG_ROUTER_ON_A_STICK_CLOSE.format(port=self.intf)
+                      map(lambda v: CONFIG_ROUTER_ON_A_STICK_BLOCK.format(
+                          vlan=v.get_number(),
+                          gw=v.get_ipv4_gateway().get_ip_addr(),
+                          mask=v.get_ipv4_gateway().get_mask(),
+                          port=self.intf,
+                          additional=self.dhcp_relay.provision() if self.dhcp_relay is not None and v.get_dhcp_enabled() else ""),
+                      regular_vlans)) \
+            + reduce(lambda a,x: a+x,
+                     map(lambda v: CONFIG_NATIVE_ROUTER_ON_A_STICK_BLOCK.format(vlan=v.get_number(), port=self.intf),
+                         native_vlans)) \
+            + PORT_NO_SHUT.format(port=self.intf)
 
 
 class IPv4LoopbackPort:

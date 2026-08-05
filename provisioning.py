@@ -32,11 +32,11 @@ dhcp_relay = DHCPRelay(hq_s000_ipv4)
 format_octet_binary = lambda n: '{0:08b}'.format(n)
 
 vlans = {
-    10: Vlan("Sales", 10, vlan_10_gw_ipv4, "g0/0"),
-    20: Vlan("IT", 20, vlan_20_gw_ipv4, "g0/0"),
+    10: Vlan("Sales", 10, vlan_10_gw_ipv4, "g0/0", dhcp=True),
+    20: Vlan("IT", 20, vlan_20_gw_ipv4, "g0/0", dhcp=True),
     99: Vlan("Management", 99, vlan_99_gw_ipv4, "g0/0"),
     555: Vlan("Parking_Lot", 555),
-    1000: NativeVlan(1000, "g0/0")
+    1000: NativeVlan(1000)
 }
 
 devices = {
