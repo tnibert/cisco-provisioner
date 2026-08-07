@@ -1,4 +1,5 @@
 from ip import IPAddress
+from templates.switch import CONFIG_TRUNK_NATIVE
 from typing import Union
 
 class Vlan:
@@ -27,6 +28,9 @@ class NativeVlan:
         self.number = number
 
     def provision_switch_trunk(self) -> str:
+        """
+        todo: move to Switch
+        """
         return CONFIG_TRUNK_NATIVE.format(number=self.number)
 
     def get_number(self) -> int:
