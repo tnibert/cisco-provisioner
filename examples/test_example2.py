@@ -49,5 +49,84 @@ exit
         result = strip_blank_lines(devices["R1"].provision())
         self.assertEqual(result, strip_blank_lines(expected))
 
+
+class TestProvisionSwitch(unittest.TestCase):
+    def test_s1(self):
+        expected = """hostname S1
+no ip domain-lookup
+enable secret class
+line console 0
+password cisco
+login
+logging synchronous
+exit
+line vty 0 15
+password cisco
+login
+logging synchronous
+exit
+service password-encryption
+banner motd $ Authorized Access Only! $
+int range f0/5-6
+switchport mode access
+! portfast and BPDU
+spanning-tree portfast
+spanning-tree bpduguard enable
+! secure access ports
+switchport port-security
+switchport port-security max 1
+switchport port-security mac-address sticky
+switchport port-security violation shutdown
+no shut
+exit
+! disable unused ports
+int range f0/1-4,f0/7-24,g0/1-2
+switchport mode access
+switchport access vlan 555
+shut
+exit
+"""
+        result = strip_blank_lines(devices["S1"].provision())
+        self.assertEqual(result, strip_blank_lines(expected))
+
+    def test_s2(self):
+        expected = """hostname S2
+no ip domain-lookup
+enable secret class
+line console 0
+password cisco
+login
+logging synchronous
+exit
+line vty 0 15
+password cisco
+login
+logging synchronous
+exit
+service password-encryption
+banner motd $ Authorized Access Only! $
+int range f0/5,f0/18
+switchport mode access
+! portfast and BPDU
+spanning-tree portfast
+spanning-tree bpduguard enable
+! secure access ports
+switchport port-security
+switchport port-security max 1
+switchport port-security mac-address sticky
+switchport port-security violation shutdown
+no shut
+exit
+! disable unused ports
+int range f0/1-4,f0/6-17,f0/19-24,g0/1-2
+switchport mode access
+switchport access vlan 555
+shut
+exit
+"""
+        result = strip_blank_lines(devices["S2"].provision())
+        self.assertEqual(result, strip_blank_lines(expected))
+
+
 if __name__ == "__main__":
     unittest.main()
