@@ -48,12 +48,12 @@ class DHCPv4Pool(DHCPPool):
 
 
 class DHCPv6Pool(DHCPPool):
-    def __init__(self, pool_name: str, dns_addr: IPAddress=None, domain_name: str=None, address_prefix: str=None):
+    def __init__(self, pool_name: str, dns_addr: IPAddress=None, domain_name: str=None, address_prefix: IPAddress=None):
         super().__init__(pool_name, dns_addr, domain_name)
         self.address_prefix = address_prefix
 
     def provision_address_prefix(self):
-        return DHCP_V6_STATEFUL_POOL_PREFIX.format(addr=self.address_prefix) if self.address_prefix is not None else ""
+        return DHCP_V6_STATEFUL_POOL_PREFIX.format(addr=self.address_prefix.get_cidr()) if self.address_prefix is not None else ""
 
     def provision(self) -> str:
         return DHCP_V6_POOL_CREATE.format(pool_name=self.pool_name,

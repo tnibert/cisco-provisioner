@@ -10,6 +10,7 @@ MASK_LEN = 64
 r1_g00_ip = IPAddress("2001:db8:acad:2::1", MASK_LEN)
 r1_g01_ip = IPAddress("2001:db8:acad:1::1", MASK_LEN)
 dns_addr = IPAddress("2001:db8:acad::254", MASK_LEN)
+dhcpv6_addr_prefix = IPAddress("2001:db8:acad:2:aaaa::", 80)
 
 devices = {
     "S1": Switch("S1", None, None, None,
@@ -33,7 +34,7 @@ devices = {
                  [
                     DHCPv6Server([
                         DHCPv6Pool("R1-STATELESS", dns_addr, DOMAIN),
-                        DHCPv6Pool("R1-STATEFUL", dns_addr, DOMAIN, "2001:db8:acad:2:aaaa::/80")
+                        DHCPv6Pool("R1-STATEFUL", dns_addr, DOMAIN, dhcpv6_addr_prefix)
                     ])
                  ]),
 }
