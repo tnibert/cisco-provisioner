@@ -4,7 +4,7 @@ from switch import Switch
 from ports import *
 from vlan import Vlan, NativeVlan
 from ip import IPAddress
-from dhcp import DHCPServer, DHCPPool, DHCPRelay
+from dhcp import DHCPv4Server, DHCPv4Pool, DHCPRelay
 
 DOMAIN = "cisco.com"
 
@@ -64,7 +64,8 @@ devices = {
                      StaticIPv4Route(vlan_20_net_ipv4, branch_s000_ipv4),
                      StaticIPv4Route(vlan_99_net_ipv4, branch_s000_ipv4),
                  ],
-                 DHCPServer([
+                 [
+                     DHCPv4Server([
                      hq_g00_ipv4,
                      IPAddress("192.168.100.2", hq_g00_ipv4.get_mask_len()),
                      IPAddress("192.168.100.3", hq_g00_ipv4.get_mask_len()),
@@ -81,8 +82,9 @@ devices = {
                      IPAddress("192.168.20.4", vlan_20_gw_ipv4.get_mask_len()),
                      IPAddress("192.168.20.5", vlan_20_gw_ipv4.get_mask_len())
                  ], [
-                     DHCPPool("LAN1", lan_1_net_ipv4, hq_g00_ipv4, domain_name=DOMAIN),
-                     DHCPPool("LAN10", vlan_10_net_ipv4, vlan_10_gw_ipv4, domain_name=DOMAIN),
-                     DHCPPool("LAN20", vlan_20_net_ipv4, vlan_20_gw_ipv4, domain_name=DOMAIN),
-                 ]))
+                     DHCPv4Pool("LAN1", lan_1_net_ipv4, hq_g00_ipv4, domain_name=DOMAIN),
+                     DHCPv4Pool("LAN10", vlan_10_net_ipv4, vlan_10_gw_ipv4, domain_name=DOMAIN),
+                     DHCPv4Pool("LAN20", vlan_20_net_ipv4, vlan_20_gw_ipv4, domain_name=DOMAIN),
+                 ])
+                 ])
 }

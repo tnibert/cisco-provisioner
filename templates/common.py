@@ -14,10 +14,8 @@ logging synchronous
 exit
 service password-encryption
 banner motd $ Authorized Access Only! $
-ipv6 unicast-routing
 """
 
 PORT_NO_SHUT = """
-int {port}
 no shut
 """

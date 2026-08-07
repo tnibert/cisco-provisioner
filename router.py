@@ -1,9 +1,10 @@
 from functools import reduce
 
-from dhcp import DHCPServer, DHCPRelay
+from dhcp import DHCPServer, DHCPRelay, DHCPV6_SLAAC, DHCPV6_MODE_TO_FLAGS
+from templates.dhcp import DHCP_V6_SERVER_CREATE
 from templates.router import (CONFIG_IPV4_PORT, CONFIG_IPV6_PORT, CONFIG_IPV6_LINK_LOCAL, DCE,
                               CONFIG_ROUTER_ON_A_STICK_BLOCK, CONFIG_NATIVE_ROUTER_ON_A_STICK_BLOCK,
-                              CONFIG_LOOPBACK_IPV4, INTERFACE_BLOCK)
+                              CONFIG_LOOPBACK_IPV4, INTERFACE_BLOCK, ENABLE_IPV6)
 from templates.common import PORT_NO_SHUT
 from device import Device
 from vlan import VlanUnion, NativeVlan
@@ -13,10 +14,12 @@ from ip import IPAddress
 from typing import List, Union
 
 class BasePort:
-    def __init__(self, intf: str, dce: bool=False, dhcp_relay: DHCPRelay=None):
+    def __init__(self, intf: str, dce: bool=False, dhcp_relay: DHCPRelay=None, dhcpv6_pool: str=None, dhcpv6_mode=DHCPV6_SLAAC):
         self.intf = intf
         self.dce = dce
         self.dhcp_relay = dhcp_relay
+        self.dhcpv6_pool = dhcpv6_pool
+        self.dhcpv6_mode = dhcpv6_mode
 
     def provision(self):
         raise Unimplemented("use a port implementation")
@@ -27,10 +30,24 @@ class BasePort:
     def provision_dhcp_relay(self) -> str:
         return self.dhcp_relay.provision() if self.dhcp_relay is not None else ""
 
+    def provision_dhcp_v6(self) -> str:
+        print(self.dhcpv6_mode)
+        if self.dhcpv6_pool is not None and self.dhcpv6_mode != DHCPV6_SLAAC:
+            return DHCP_V6_SERVER_CREATE.format(pool_name=self.dhcpv6_pool,
+                                                flags=DHCPV6_MODE_TO_FLAGS[self.dhcpv6_mode])
+        else:
+            return ""
+
 
 class OrdinaryPort(BasePort):
-    def __init__(self, intf, ipv4: IPAddress, ipv6: IPAddress, link_local: bool=False, dce: bool=False, dhcp_relay=None):
-        super().__init__(intf, dce, dhcp_relay)
+    def __init__(self, intf,
+                 ipv4: IPAddress, ipv6: IPAddress,
+                 link_local: bool=False,
+                 dce: bool=False,
+                 dhcp_relay=None,
+                 dhcpv6_pool: str=None,
+                 dhcpv6_mode=DHCPV6_SLAAC):
+        super().__init__(intf, dce, dhcp_relay, dhcpv6_pool, dhcpv6_mode)
         self.ipv4 = ipv4
         self.ipv6 = ipv6
         self.link_local = link_local
@@ -50,7 +67,9 @@ class OrdinaryPort(BasePort):
                                            + self.provision_ipv6() \
                                            + self.provision_ipv6_link_local() \
                                            + self.provision_dce() \
-                                           + self.provision_dhcp_relay())
+                                           + self.provision_dhcp_relay() \
+                                           + self.provision_dhcp_v6() \
+                                           + PORT_NO_SHUT)
 
 
 class RouterOnAStickPort(BasePort):
@@ -93,11 +112,11 @@ class Router(Device):
     def __init__(self, hostname: str,
                  ports: List[PortUnion]=None,
                  routes: List[StaticRoute]=None,
-                 dhcp_server: DHCPServer=None):
+                 dhcp_servers: List[DHCPServer]=None):
         super().__init__(hostname, 4)
         self.ports = ports if ports is not None else []
         self.routes = routes if routes is not None else []
-        self.dhcp_server = dhcp_server
+        self.dhcp_servers = dhcp_servers if dhcp_servers is not None else []
 
     def provision_ports(self):
         return reduce(lambda a, x: a + x,
@@ -109,8 +128,14 @@ class Router(Device):
                       map(lambda v: v.provision(),
                           self.routes), "")
 
+    def provision_dhcp(self):
+        return reduce(lambda a,x: a+x,
+                      map(lambda d: d.provision(),
+                          self.dhcp_servers), "")
+
     def provision(self) -> str:
         return self.provision_basic() \
+            + ENABLE_IPV6 \
+            + self.provision_dhcp() \
             + self.provision_ports() \
-            + self.provision_routes() \
-            + (self.dhcp_server.provision() if self.dhcp_server is not None else "")
+            + self.provision_routes()

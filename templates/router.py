@@ -4,6 +4,10 @@ interface {intf}
 exit
 """
 
+ENABLE_IPV6 = """
+ipv6 unicast-routing
+"""
+
 CONFIG_IPV4_PORT = """
 ip address {ipv4} {subnet_mask}
 """
