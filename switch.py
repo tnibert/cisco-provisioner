@@ -3,6 +3,7 @@ from functools import reduce
 from ip import IPAddress
 from templates.switch import SWITCH_SVI_SSH, CONFIG_SWITCH_VLAN
 from device import Device
+from utils import strip_blank_lines
 from vlan import Vlan, NativeVlan
 from ports import Ports
 from typing import List, Union
@@ -32,4 +33,9 @@ class Switch(Device):
         return reduce(lambda a, x: a + x, [CONFIG_SWITCH_VLAN.format(number=v.get_number(), name=v.get_name()) for v in self.vlans], "")
 
     def provision(self) -> str:
-        return self.provision_basic() + self.provision_switch_vlans() + self.provision_ssh() + self.provision_switch_ports()
+        return strip_blank_lines(
+            self.provision_basic() \
+            + self.provision_switch_vlans() \
+            + self.provision_ssh() \
+            + self.provision_switch_ports()
+        )

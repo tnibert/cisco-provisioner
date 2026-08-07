@@ -7,6 +7,7 @@ from templates.router import (CONFIG_IPV4_PORT, CONFIG_IPV6_PORT, CONFIG_IPV6_LI
                               CONFIG_LOOPBACK_IPV4, INTERFACE_BLOCK, ENABLE_IPV6)
 from templates.common import PORT_NO_SHUT
 from device import Device
+from utils import strip_blank_lines
 from vlan import VlanUnion, NativeVlan
 from routes import StaticRoute
 from exceptions import Unimplemented
@@ -31,7 +32,6 @@ class BasePort:
         return self.dhcp_relay.provision() if self.dhcp_relay is not None else ""
 
     def provision_dhcp_v6(self) -> str:
-        print(self.dhcpv6_mode)
         if self.dhcpv6_pool is not None and self.dhcpv6_mode != DHCPV6_SLAAC:
             return DHCP_V6_SERVER_CREATE.format(pool_name=self.dhcpv6_pool,
                                                 flags=DHCPV6_MODE_TO_FLAGS[self.dhcpv6_mode])
@@ -134,8 +134,10 @@ class Router(Device):
                           self.dhcp_servers), "")
 
     def provision(self) -> str:
-        return self.provision_basic() \
+        return strip_blank_lines(
+            self.provision_basic() \
             + ENABLE_IPV6 \
             + self.provision_dhcp() \
             + self.provision_ports() \
             + self.provision_routes()
+        )
