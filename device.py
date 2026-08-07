@@ -1,4 +1,4 @@
-from templates import BASIC_CONFIG
+from templates.common import BASIC_CONFIG
 
 class Device:
     def __init__(self, hostname: str, vty_max: int):

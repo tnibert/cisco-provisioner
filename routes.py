@@ -1,5 +1,5 @@
 from ip import IPAddress
-from templates import STATIC_ROUTES
+from templates.router import STATIC_ROUTES
 from exceptions import InsufficientInfo
 
 class StaticRoute:

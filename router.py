@@ -1,40 +1,67 @@
 from functools import reduce
 
-from dhcp import DHCPServer
-from templates import *
+from dhcp import DHCPServer, DHCPRelay
+from templates.router import (CONFIG_IPV4_PORT, CONFIG_IPV6_PORT, CONFIG_IPV6_LINK_LOCAL, DCE,
+                              CONFIG_ROUTER_ON_A_STICK_BLOCK, CONFIG_NATIVE_ROUTER_ON_A_STICK_BLOCK,
+                              CONFIG_LOOPBACK_IPV4, INTERFACE_BLOCK)
+from templates.common import PORT_NO_SHUT
 from device import Device
-from vlan import Vlan, NativeVlan
+from vlan import VlanUnion, NativeVlan
 from routes import StaticRoute
+from exceptions import Unimplemented
 from ip import IPAddress
 from typing import List, Union
 
-class Port:
-    def __init__(self, intf, ipv4: IPAddress, ipv6: IPAddress, link_local: bool=False, dce: bool=False, dhcp_relay=None):
+class BasePort:
+    def __init__(self, intf: str, dce: bool=False, dhcp_relay: DHCPRelay=None):
         self.intf = intf
-        self.ipv4 = ipv4
-        self.ipv6 = ipv6
-        self.link_local = link_local
         self.dce = dce
         self.dhcp_relay = dhcp_relay
 
     def provision(self):
-        return CONFIG_ROUTER_PORT.format(intf=self.intf,
-                                         ipv4=self.ipv4.get_ip_addr(),
-                                         subnet_mask=self.ipv4.get_mask(),
-                                         ipv6=self.ipv6,
-                                         additional= CONFIG_IPV6_PORT.format(ipv6=self.ipv6.get_cidr()) if self.ipv6 is not None else "" \
-                                                     + CONFIG_IPV6_LINK_LOCAL.format(addr="FE80::1") if self.link_local else "" \
-                                                     + DCE if self.dce else "" \
-                                                     + self.dhcp_relay.provision() if self.dhcp_relay is not None else "")
+        raise Unimplemented("use a port implementation")
+
+    def provision_dce(self) -> str:
+        return DCE if self.dce else ""
+
+    def provision_dhcp_relay(self) -> str:
+        return self.dhcp_relay.provision() if self.dhcp_relay is not None else ""
 
 
-class RouterOnAStickPort:
-    def __init__(self, intf: str, vlans: List[Union[Vlan|NativeVlan]], dhcp_relay=None):
-        self.intf = intf
-        self.vlans = vlans
-        self.dhcp_relay = dhcp_relay
+class OrdinaryPort(BasePort):
+    def __init__(self, intf, ipv4: IPAddress, ipv6: IPAddress, link_local: bool=False, dce: bool=False, dhcp_relay=None):
+        super().__init__(intf, dce, dhcp_relay)
+        self.ipv4 = ipv4
+        self.ipv6 = ipv6
+        self.link_local = link_local
+
+    def provision_ipv4(self) -> str:
+        return CONFIG_IPV4_PORT.format(ipv4=self.ipv4.get_ip_addr(), subnet_mask=self.ipv4.get_mask()) if self.ipv4 is not None else ""
+
+    def provision_ipv6(self) -> str:
+        return CONFIG_IPV6_PORT.format(ipv6=self.ipv6.get_cidr()) if self.ipv6 is not None else ""
+
+    def provision_ipv6_link_local(self) -> str:
+        return CONFIG_IPV6_LINK_LOCAL.format(addr="FE80::1") if self.link_local else ""
 
     def provision(self):
+        return INTERFACE_BLOCK.format(intf=self.intf,
+                                      body= self.provision_ipv4() \
+                                           + self.provision_ipv6() \
+                                           + self.provision_ipv6_link_local() \
+                                           + self.provision_dce() \
+                                           + self.provision_dhcp_relay())
+
+
+class RouterOnAStickPort(BasePort):
+    def __init__(self, intf: str, vlans: List[VlanUnion], dhcp_relay=None):
+        super().__init__(intf, False, dhcp_relay)
+        self.vlans = vlans
+
+    def provision(self):
+        """
+        Todo: bring this into alignement with design of OrdinaryPort::provision()
+        """
         regular_vlans = filter(lambda v: not isinstance(v, NativeVlan), self.vlans)
         native_vlans = filter(lambda v: isinstance(v, NativeVlan), self.vlans)
         return reduce(lambda a, x: a + x,
@@ -60,29 +87,17 @@ class IPv4LoopbackPort:
         return CONFIG_LOOPBACK_IPV4.format(number=self.number, addr=self.ip.get_ip_addr(), mask=self.ip.get_mask())
 
 
+PortUnion = Union[BasePort | IPv4LoopbackPort]
+
 class Router(Device):
     def __init__(self, hostname: str,
-                 ports: List[Union[Port|RouterOnAStickPort|IPv4LoopbackPort]]=None,
+                 ports: List[PortUnion]=None,
                  routes: List[StaticRoute]=None,
-                 dhcp_server: DHCPServer=None,
-                 vlans: List[Vlan]=None):
+                 dhcp_server: DHCPServer=None):
         super().__init__(hostname, 4)
         self.ports = ports if ports is not None else []
         self.routes = routes if routes is not None else []
         self.dhcp_server = dhcp_server
-
-    def provision_ipv6(self) -> str:
-        return reduce(lambda a, x: a + x,
-                  map(lambda v: v.provision_ipv6(),
-                      self.vlans), "")
-
-    def provision_ipv6_link_local(self) -> str:
-        """
-        This would not be desired for management or parking lot vlans
-        """
-        return reduce(lambda a, x: a + x,
-                  map(lambda v: v.provision_ipv6_link_local(),
-                      self.vlans), "")
 
     def provision_ports(self):
         return reduce(lambda a, x: a + x,

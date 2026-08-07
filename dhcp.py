@@ -2,7 +2,7 @@ from typing import List
 from functools import reduce
 
 from ip import IPAddress
-from templates import DHCP_V4_EXCLUDE, DHCP_V4_POOL_CREATE, DHCP_V4_DNS, DHCP_V4_DOMAIN_NAME, DHCP_V4_RELAY
+from templates.dhcp import DHCP_V4_EXCLUDE, DHCP_V4_POOL_CREATE, DHCP_V4_DNS, DHCP_V4_DOMAIN_NAME, DHCP_V4_RELAY
 
 
 class DHCPPool:

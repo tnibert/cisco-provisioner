@@ -1,4 +1,4 @@
-from router import Router, Port, RouterOnAStickPort, IPv4LoopbackPort
+from router import Router, OrdinaryPort, RouterOnAStickPort, IPv4LoopbackPort
 from routes import StaticIPv4Route
 from switch import Switch
 from ports import *
@@ -48,15 +48,15 @@ devices = {
     "BRANCH": Router("BRANCH",
                      [
                          RouterOnAStickPort("g0/0", [vlans[10], vlans[20], vlans[99], vlans[1000]], dhcp_relay),
-                         Port("s0/0/0", branch_s000_ipv4, None)
+                         OrdinaryPort("s0/0/0", branch_s000_ipv4, None)
                      ],
                      [
                          StaticIPv4Route(default_route_net_ipv4, hq_s000_ipv4, "s0/0/0"),
                      ]),
     "HQ": Router("HQ",
                  [
-                     Port("g0/0", hq_g00_ipv4, None),
-                     Port("s0/0/0", hq_s000_ipv4, None, dce=True),
+                     OrdinaryPort("g0/0", hq_g00_ipv4, None),
+                     OrdinaryPort("s0/0/0", hq_s000_ipv4, None, dce=True),
                      IPv4LoopbackPort(hq_lo0_ipv4, 0)
                  ],
                  [

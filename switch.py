@@ -1,10 +1,10 @@
 from functools import reduce
 
 from ip import IPAddress
-from templates import *
+from templates.switch import SWITCH_SVI_SSH, CONFIG_SWITCH_VLAN
 from device import Device
 from vlan import Vlan, NativeVlan
-from ports import Ports, TrunkPorts
+from ports import Ports
 from typing import List, Union
 
 class Switch(Device):
@@ -12,8 +12,8 @@ class Switch(Device):
         super().__init__(hostname, 15)
         self.access_vlan = access_vlan
         self.ip = ip
-        self.port_configs = port_configs
-        self.vlans = vlans
+        self.port_configs = port_configs if port_configs is not None else []
+        self.vlans = vlans if vlans is not None else []
 
     def provision_ssh(self) -> str:
         if None in (self.access_vlan, self.ip):
@@ -26,10 +26,10 @@ class Switch(Device):
                                          vty_max=self.vty_max)
 
     def provision_switch_ports(self):
-        return reduce(lambda a, x: a + x, [p.provision() for p in self.port_configs])
+        return reduce(lambda a, x: a + x, [p.provision() for p in self.port_configs], "")
 
     def provision_switch_vlans(self):
-        return reduce(lambda a, x: a + x, [CONFIG_SWITCH_VLAN.format(number=v.get_number(), name=v.get_name()) for v in self.vlans])
+        return reduce(lambda a, x: a + x, [CONFIG_SWITCH_VLAN.format(number=v.get_number(), name=v.get_name()) for v in self.vlans], "")
 
     def provision(self) -> str:
         return self.provision_basic() + self.provision_switch_vlans() + self.provision_ssh() + self.provision_switch_ports()

@@ -1,4 +1,5 @@
-from templates import *
+from templates.switch import (CONFIG_UNUSED_PORTS, CONFIG_TRUNK_PORTS, CONFIG_TRUNK_REGULAR, CONFIG_ACCESS_PORTS,
+                              CONFIG_ACCESS_VLAN, CONFIG_ETHERCHANNEL_PORTS)
 from vlan import Vlan, NativeVlan
 from typing import List, Union
 from functools import reduce
@@ -35,12 +36,13 @@ class TrunkPorts(Ports):
                                          allowed=CONFIG_TRUNK_REGULAR.format(number=regular) + native)
 
 class AccessPorts(Ports):
-    def __init__(self, ports, access_vlan):
+    def __init__(self, ports, access_vlan: Vlan=None):
         super().__init__(ports)
         self.access_vlan = access_vlan
 
     def provision(self) -> str:
-        return CONFIG_ACCESS_PORTS.format(ports=self.ports, access_vlan=self.access_vlan)
+        return CONFIG_ACCESS_PORTS.format(ports=self.ports,
+                                          access_vlan_clause=CONFIG_ACCESS_VLAN.format(access_vlan=self.access_vlan) if self.access_vlan is not None else "")
 
 class EtherChannelPorts(Ports):
     def __init__(self, ports, chan_num):

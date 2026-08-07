@@ -1,8 +1,7 @@
 import sys
 
-from examples.example1 import devices
+from examples.example2 import devices
 
-format_octet_binary = lambda n: '{0:08b}'.format(n)
 
 
 if __name__=='__main__':
