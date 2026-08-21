@@ -1,6 +1,7 @@
 from functools import reduce
 
 from dhcp import DHCPServer, DHCPRelay, DHCPV6_SLAAC, DHCPV6_MODE_TO_FLAGS
+from rip import RIP
 from templates.dhcp import DHCP_V6_SERVER_CREATE
 from templates.router import (CONFIG_IPV4_PORT, CONFIG_IPV6_PORT, CONFIG_IPV6_LINK_LOCAL, DCE,
                               CONFIG_ROUTER_ON_A_STICK_BLOCK, CONFIG_NATIVE_ROUTER_ON_A_STICK_BLOCK,
@@ -41,7 +42,8 @@ class BasePort:
 
 class OrdinaryPort(BasePort):
     def __init__(self, intf,
-                 ipv4: IPAddress, ipv6: IPAddress,
+                 ipv4: IPAddress,
+                 ipv6: IPAddress,
                  link_local: bool=False,
                  dce: bool=False,
                  dhcp_relay=None,
@@ -112,11 +114,13 @@ class Router(Device):
     def __init__(self, hostname: str,
                  ports: List[PortUnion]=None,
                  routes: List[StaticRoute]=None,
-                 dhcp_servers: List[DHCPServer]=None):
+                 dhcp_servers: List[DHCPServer]=None,
+                 rip: RIP=None):
         super().__init__(hostname, 4)
         self.ports = ports if ports is not None else []
         self.routes = routes if routes is not None else []
         self.dhcp_servers = dhcp_servers if dhcp_servers is not None else []
+        self.rip = rip
 
     def provision_ports(self):
         return reduce(lambda a, x: a + x,
@@ -139,5 +143,6 @@ class Router(Device):
             + ENABLE_IPV6 \
             + self.provision_dhcp() \
             + self.provision_ports() \
-            + self.provision_routes()
+            + self.provision_routes() \
+            + (self.rip.provision() if self.rip is not None else "")
         )
