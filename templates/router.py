@@ -62,7 +62,3 @@ ipv6 route {net_addr} {intf} {ad}
 ipv6 route {net_addr} {intf} {next_hop} {ad}
 """,
 }
-
-"""
-bandwidth {}
-"""

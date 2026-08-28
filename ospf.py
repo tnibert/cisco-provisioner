@@ -6,6 +6,9 @@ from provisionable import Provisionable
 from templates.ospf import ospf_setup, network, passive_interface, v2_init, v3_init, ipv6_interface
 from templates.router import INTERFACE_BLOCK
 
+"""
+todo: cost, bandwidth, and reference bandwidth modification is not yet implemented
+"""
 
 class OSPF(Provisionable):
     """

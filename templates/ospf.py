@@ -20,6 +20,10 @@ auto-cost reference-bandwidth {bandwidth}
 ip ospf cost {}
 """
 
+"""
+bandwidth {}
+"""
+
 v2_init = """
 router ospf {process_id}
 """
