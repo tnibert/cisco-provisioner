@@ -41,10 +41,11 @@ class BasePort:
 
 
 class OrdinaryPort(BasePort):
-    def __init__(self, intf,
+    def __init__(self,
+                 intf,
                  ipv4: IPAddress,
                  ipv6: IPAddress,
-                 link_local: bool=False,
+                 link_local: IPAddress=None,
                  dce: bool=False,
                  dhcp_relay=None,
                  dhcpv6_pool: str=None,
@@ -61,7 +62,7 @@ class OrdinaryPort(BasePort):
         return CONFIG_IPV6_PORT.format(ipv6=self.ipv6.get_cidr()) if self.ipv6 is not None else ""
 
     def provision_ipv6_link_local(self) -> str:
-        return CONFIG_IPV6_LINK_LOCAL.format(addr="FE80::1") if self.link_local else ""
+        return CONFIG_IPV6_LINK_LOCAL.format(addr=self.link_local.get_ip_addr()) if self.link_local is not None else ""
 
     def provision(self):
         return INTERFACE_BLOCK.format(intf=self.intf,

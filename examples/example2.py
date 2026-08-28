@@ -25,8 +25,8 @@ devices = {
                  ]),
     "R1": Router("R1",
                  [
-                     OrdinaryPort("g0/0", None, r1_g00_ip, True, dhcpv6_pool="R1-STATEFUL", dhcpv6_mode=DHCPV6_STATEFUL),
-                     OrdinaryPort("g0/1", None, r1_g01_ip, True, dhcpv6_pool="R1-STATELESS", dhcpv6_mode=DHCPV6_STATELESS)
+                     OrdinaryPort("g0/0", None, r1_g00_ip, IPAddress("FE80::1", MASK_LEN), dhcpv6_pool="R1-STATEFUL", dhcpv6_mode=DHCPV6_STATEFUL),
+                     OrdinaryPort("g0/1", None, r1_g01_ip, IPAddress("FE80::1", MASK_LEN), dhcpv6_pool="R1-STATELESS", dhcpv6_mode=DHCPV6_STATELESS)
                  ],
                  [
 
