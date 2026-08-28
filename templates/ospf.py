@@ -5,7 +5,7 @@ ospf_setup = """
 router-id {router_id}
 {networks}
 {passive_interfaces}
-end
+exit
 """
 
 network = """
@@ -26,4 +26,8 @@ router ospf {process_id}
 
 v3_init = """
 ipv6 router ospf {process_id}
+"""
+
+ipv6_interface = """
+ipv6 ospf {process_id} area {area_id}
 """
