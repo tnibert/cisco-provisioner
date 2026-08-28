@@ -2,10 +2,11 @@ from functools import reduce
 from typing import List
 
 from ip import IPAddress
+from provisionable import Provisionable
 from templates.rip import rip_setup, network, passive_interface, default_route_propagate
 
 
-class RIP:
+class RIP(Provisionable):
     def __init__(self, networks: List[IPAddress], passive_interfaces: List[str], default_rt_propagate: bool=False):
         self.networks = networks if networks is not None else []
         self.passive_interfaces = passive_interfaces if passive_interfaces is not None else []
