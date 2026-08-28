@@ -38,17 +38,9 @@ int {port}.{vlan}
 encapsulation dot1q {vlan} native
 """
 
-CONFIG_IPV6_BLOCK = """
-int {port}.{vlan}
-""" + CONFIG_IPV6_PORT
-
 CONFIG_IPV6_LINK_LOCAL = """
 ipv6 address {addr} link-local
 """
-
-CONFIG_IPV6_LINK_LOCAL_VLAN = """
-int {port}.{vlan}
-""" + CONFIG_IPV6_LINK_LOCAL.format(addr="FE80::1")
 
 STATIC_ROUTES = {
     "IPV4_NEXT_HOP": """
@@ -70,3 +62,7 @@ ipv6 route {net_addr} {intf} {ad}
 ipv6 route {net_addr} {intf} {next_hop} {ad}
 """,
 }
+
+"""
+bandwidth {}
+"""

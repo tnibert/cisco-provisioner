@@ -3,3 +3,6 @@ class InsufficientInfo(Exception):
 
 class Unimplemented(Exception):
     pass
+
+class InvalidOption(Exception):
+    pass
