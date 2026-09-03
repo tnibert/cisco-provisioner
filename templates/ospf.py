@@ -5,11 +5,28 @@ ospf_setup = """
 router-id {router_id}
 {networks}
 {passive_interfaces}
+{asbr}
 exit
 """
 
 network = """
 network {net_addr} {wildcard_mask} area {area_id}
+"""
+
+set_asbr = """
+default-information originate
+"""
+
+route_summary = """
+area {number} range {addr} {net_mask}
+"""
+
+set_hello_ival = """
+ip ospf hello-interval {seconds}
+"""
+
+set_dead_ival = """
+ip ospf hello-interval {seconds}
 """
 
 """
