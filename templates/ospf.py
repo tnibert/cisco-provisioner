@@ -18,8 +18,12 @@ set_asbr = """
 default-information originate
 """
 
-route_summary = """
+route_summary_v2 = """
 area {area} range {addr} {net_mask}
+"""
+
+route_summary_v3 = """
+area {area} range {addr_mask}
 """
 
 set_hello_ival = """
@@ -28,6 +32,10 @@ ip ospf hello-interval {seconds}
 
 set_dead_ival = """
 ip ospf dead-interval {seconds}
+"""
+
+ipv6_point_to_point = """
+ipv6 ospf network point-to-point
 """
 
 """
