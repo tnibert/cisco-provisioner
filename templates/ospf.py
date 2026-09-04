@@ -5,6 +5,7 @@ ospf_setup = """
 router-id {router_id}
 {networks}
 {passive_interfaces}
+{summaries}
 {asbr}
 exit
 """
@@ -18,7 +19,7 @@ default-information originate
 """
 
 route_summary = """
-area {number} range {addr} {net_mask}
+area {area} range {addr} {net_mask}
 """
 
 set_hello_ival = """
@@ -26,7 +27,7 @@ ip ospf hello-interval {seconds}
 """
 
 set_dead_ival = """
-ip ospf hello-interval {seconds}
+ip ospf dead-interval {seconds}
 """
 
 """
@@ -37,8 +38,8 @@ auto-cost reference-bandwidth {bandwidth}
 ip ospf cost {}
 """
 
-"""
-bandwidth {}
+bandwidth_block = """
+bandwidth {speed}
 """
 
 v2_init = """

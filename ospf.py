@@ -4,14 +4,15 @@ from typing import List
 from ip import IPAddress
 from provisionable import Provisionable, provision_group
 from templates.ospf import ospf_setup, network, passive_interface, v2_init, v3_init, ipv6_interface, set_asbr, \
-    set_hello_ival
+    set_hello_ival, route_summary, set_dead_ival, bandwidth_block
 from templates.router import INTERFACE_BLOCK
 
 """
-todo: cost, bandwidth, and reference bandwidth modification is not yet implemented
+todo: cost and reference bandwidth modification is not yet implemented
 """
 
 DEFAULT_HELLO_INTERVAL = 10
+DEFAULT_DEAD_INTERVAL = 40
 
 
 class OSPFv2Network(Provisionable):
@@ -28,15 +29,23 @@ class OSPFv2Network(Provisionable):
 
 
 class OSPFInterface(Provisionable):
-    def __init__(self, intf: str, hello_interval=DEFAULT_HELLO_INTERVAL):
+    def __init__(self, intf: str,
+                 hello_interval=DEFAULT_HELLO_INTERVAL,
+                 dead_interval=DEFAULT_DEAD_INTERVAL,
+                 bandwidth=None):
         self.intf = intf
         self.hello_interval=hello_interval
+        self.dead_interval=dead_interval
+        self.bandwidth = bandwidth
 
     def provision(self):
+        body = (set_hello_ival.format(seconds=self.hello_interval) if self.hello_interval != DEFAULT_HELLO_INTERVAL else "") \
+            + (set_dead_ival.format(seconds=self.dead_interval) if self.dead_interval != DEFAULT_DEAD_INTERVAL else "") \
+            + (bandwidth_block.format(speed=self.bandwidth) if self.bandwidth is not None else "")
         return INTERFACE_BLOCK.format(
             intf=self.intf,
-            body=set_hello_ival.format(seconds=self.hello_interval)
-        ) if self.hello_interval != DEFAULT_HELLO_INTERVAL else ""
+            body=body
+        )
 
 
 class OSPFv3Interface(OSPFInterface):
@@ -58,6 +67,17 @@ class OSPFv3Interface(OSPFInterface):
         )
 
 
+class OSPFRouteSummary(Provisionable):
+    def __init__(self, area: int, summary_addr: IPAddress):
+        self.area = area
+        self.summary_addr = summary_addr
+
+    def provision(self):
+        return route_summary.format(area=self.area,
+                                    addr=self.summary_addr.get_ip_addr(),
+                                    net_mask=self.summary_addr.get_mask())
+
+
 class OSPF(Provisionable):
     """
     NB: Don't initialize this directly, use one of the versioned child classes.
@@ -75,11 +95,13 @@ class OSPFv2(OSPF):
                  passive_interfaces: List[str],
                  router_id,
                  process_id,
+                 summaries: List[OSPFRouteSummary]=None,
                  interfaces: List[OSPFInterface]=None,
                  asbr=False):
         super().__init__(passive_interfaces, router_id, process_id, asbr)
         self.networks = networks if networks is not None else []
         self.interfaces = interfaces if interfaces is not None else []
+        self.summaries = summaries if summaries is not None else []
 
     def provision(self):
         return ospf_setup.format(version_init=v2_init.format(process_id=self.process_id),
@@ -88,6 +110,7 @@ class OSPFv2(OSPF):
                                  passive_interfaces=reduce(lambda a, x: a + x,
                                                            map(lambda p: passive_interface.format(intf=p),
                                                                self.passive_interfaces), ""),
+                                 summaries=provision_group(self.summaries),
                                  asbr=set_asbr if self.asbr else ""
                                  ) + provision_group(self.interfaces)
 
@@ -110,5 +133,6 @@ class OSPFv3(OSPF):
                           passive_interfaces=reduce(lambda a, x: a + x,
                                                     map(lambda p: passive_interface.format(intf=p),
                                                         self.passive_interfaces), ""),
+                          summaries="",
                           asbr=set_asbr if self.asbr else ""
                           ) + provision_group(self.interfaces)

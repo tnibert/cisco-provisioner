@@ -18,6 +18,7 @@ def cidr_prefix_to_wildcard_mask(net_bits):
     netmask = socket.inet_ntoa(struct.pack('!I', (1<<32) - ((1 << 32) - (1 << host_bits)) - 1))
     return netmask
 
+
 class IPAddress:
     def __init__(self, ip: str, mask_bits: int):
         self.ip_addr = ip
