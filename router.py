@@ -8,7 +8,7 @@ from templates.router import (CONFIG_IPV4_PORT, CONFIG_IPV6_PORT, CONFIG_IPV6_LI
                               CONFIG_LOOPBACK_IPV4, INTERFACE_BLOCK, ENABLE_IPV6)
 from templates.common import PORT_NO_SHUT
 from device import Device
-from utils import strip_blank_lines
+from utils import strip_blank_lines, partition
 from vlan import VlanUnion, NativeVlan
 from routes import StaticRoute
 from exceptions import Unimplemented
@@ -44,7 +44,7 @@ class OrdinaryPort(BasePort):
     def __init__(self,
                  intf,
                  ipv4: IPAddress,
-                 ipv6: IPAddress,
+                 ipv6: IPAddress=None,
                  link_local: IPAddress=None,
                  dce: bool=False,
                  dhcp_relay=None,
@@ -82,10 +82,9 @@ class RouterOnAStickPort(BasePort):
 
     def provision(self):
         """
-        Todo: bring this into alignement with design of OrdinaryPort::provision()
+        Todo: bring this into alignment with design of OrdinaryPort::provision()
         """
-        regular_vlans = filter(lambda v: not isinstance(v, NativeVlan), self.vlans)
-        native_vlans = filter(lambda v: isinstance(v, NativeVlan), self.vlans)
+        regular_vlans, native_vlans = partition(lambda v: not isinstance(v, NativeVlan), self.vlans)
         return reduce(lambda a, x: a + x,
                       map(lambda v: CONFIG_ROUTER_ON_A_STICK_BLOCK.format(
                           vlan=v.get_number(),

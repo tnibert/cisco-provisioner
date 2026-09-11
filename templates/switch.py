@@ -61,17 +61,16 @@ CONFIG_TRUNK_REGULAR = """
 switchport trunk allow vlan {number}
 """
 
-# todo: pass in parking lot vlan
 CONFIG_UNUSED_PORTS = """
 ! disable unused ports
 int range {ports}
 switchport mode access
-switchport access vlan 555
+switchport access vlan {parking_lot}
 shut
 exit
 """
 
-# todo: unify with other trunk config and remove hard coded vlans
+# todo: unify with other trunk config
 CONFIG_ETHERCHANNEL_PORTS = """
 ! etherchannel
 interface range {ports}
@@ -79,8 +78,8 @@ channel-group {chan_num} mode desirable
 exit
 interface port-channel {chan_num}
 switchport mode trunk
-switchport trunk allow vlan 10,20,30,40,50,60,99,100,1000
-switchport trunk native vlan 1000
+switchport trunk allow vlan {vlans}
+switchport trunk native vlan {native_vlan}
 exit
 show interfaces port-channel {chan_num}
 show etherchannel summary
