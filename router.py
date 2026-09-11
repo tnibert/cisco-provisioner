@@ -1,5 +1,6 @@
 from functools import reduce
 
+from acl import ACL
 from dhcp import DHCPServer, DHCPRelay, DHCPV6_SLAAC, DHCPV6_MODE_TO_FLAGS
 from provisionable import provision_group, Provisionable
 from templates.dhcp import DHCP_V6_SERVER_CREATE
@@ -96,7 +97,7 @@ class RouterOnAStickPort(BasePort):
             + reduce(lambda a,x: a+x,
                      map(lambda v: CONFIG_NATIVE_ROUTER_ON_A_STICK_BLOCK.format(vlan=v.get_number(), port=self.intf),
                          native_vlans)) \
-            + PORT_NO_SHUT.format(port=self.intf)
+            + INTERFACE_BLOCK.format(intf=self.intf, body=PORT_NO_SHUT)
 
 
 class IPv4LoopbackPort:
@@ -115,12 +116,14 @@ class Router(Device):
                  ports: List[PortUnion]=None,
                  routes: List[StaticRoute]=None,
                  dhcp_servers: List[DHCPServer]=None,
-                 dynamic_routing: List[Provisionable]=None):
+                 dynamic_routing: List[Provisionable]=None,
+                 acls: List[ACL]=None):
         super().__init__(hostname, 4)
         self.ports = ports if ports is not None else []
         self.routes = routes if routes is not None else []
         self.dhcp_servers = dhcp_servers if dhcp_servers is not None else []
         self.dynamic_routing = dynamic_routing if dynamic_routing is not None else []
+        self.acls = acls if acls is not None else []
 
     def provision_ports(self):
         return provision_group(self.ports)
@@ -134,6 +137,9 @@ class Router(Device):
     def provision_dynamic_routing(self):
         return provision_group(self.dynamic_routing)
 
+    def provision_acls(self):
+        return provision_group(self.acls)
+
     def provision(self) -> str:
         return strip_blank_lines(
             self.provision_basic() \
@@ -141,5 +147,6 @@ class Router(Device):
             + self.provision_dhcp() \
             + self.provision_ports() \
             + self.provision_routes() \
-            + self.provision_dynamic_routing()
+            + self.provision_dynamic_routing() \
+            + self.provision_acls()
         )
