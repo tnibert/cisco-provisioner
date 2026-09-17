@@ -28,6 +28,10 @@ ipv6_interface_config = """
 ipv6 traffic-filter {name} {direction}
 """
 
+create_ipv6 = """
+ipv6 access-list {name}
+"""
+
 total_deny_standard = "deny any\n"
 total_deny_extended = "deny ip any any\n"
 total_deny_ipv6 = "deny ipv6 any any\n"
