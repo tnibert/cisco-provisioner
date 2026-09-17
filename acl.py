@@ -7,6 +7,10 @@ from templates.acl import create_named_acl, interface_config, base_standard_rule
     total_deny_extended
 from templates.router import INTERFACE_BLOCK
 
+"""
+IPv6 strings are in template file, but not implemented here yet.
+The commented out tcp_extended_return strings should be made toggleable via a class member.
+"""
 
 PERMIT = "permit"
 DENY = "deny"
