@@ -3,13 +3,19 @@ from typing import List, Union
 
 from ip import IPv4Address
 from provisionable import Provisionable
-from templates.acl import create_named_acl, modal_named_rule, interface_config, numbered_rule_config
+from templates.acl import create_named_acl, interface_config, base_standard_rule, base_numbered, base_extended_rule, \
+    total_deny_extended
 from templates.router import INTERFACE_BLOCK
 
 
 PERMIT = "permit"
 DENY = "deny"
 REMARK = "remark"
+
+ACL_TYPE_STANDARD = "standard"
+ACL_TYPE_EXTENDED = "extended"
+
+PROTOCOL_TCP = "tcp"
 
 class ACLInterfaceConfig:
     def __init__(self, intf: str, direction: str):
@@ -22,27 +28,52 @@ class ACLInterfaceConfig:
     def get_direction(self):
         return self.direction
 
-class ACE:
-    def __init__(self, rule, source: IPv4Address):
+class ACEStandard(Provisionable):
+    def __init__(self, rule: str, source: IPv4Address):
         self.rule = rule # deny, permit, remark
         self.source = source
 
-    def get_addr(self):
-        return self.source.get_ip_addr()
-
-    def get_wildcard(self):
-        return self.source.get_wildcard_mask()
+    def get_source(self):
+        return self.source
 
     def get_rule(self):
         return self.rule
 
-    def get_modal_named_rule(self):
-        return modal_named_rule.format(rule=self.get_rule(),
-                                       source=self.get_addr(),
-                                       wildcard=self.get_wildcard())
+    def provision(self):
+        """
+        Provision as named modal.  ACL will prepend prefix.
+        """
+        return base_standard_rule.format(rule=self.get_rule(),
+                                         source=self.get_source().get_ip_addr(),
+                                         wildcard=self.get_source().get_wildcard_mask())
+
+class ACEExtended(ACEStandard):
+    def __init__(self, rule: str, source: IPv4Address, dest: IPv4Address, predicate, operation="eq", protocol=PROTOCOL_TCP):
+        super().__init__(rule, source)
+        self.protocol = protocol
+        self.dest = dest
+        self.op = operation
+        self.predicate = predicate
+
+    def get_protocol(self):
+        return self.protocol
+
+    def get_destination(self):
+        return self.dest
+
+    def provision(self):
+        return base_extended_rule.format(rule=self.get_rule(),
+                                         protocol=self.get_protocol(),
+                                         src=self.get_source().get_ip_addr(),
+                                         src_wild=self.get_source().get_wildcard_mask(),
+                                         dst=self.get_destination().get_ip_addr(),
+                                         dst_wild=self.get_destination().get_wildcard_mask(),
+                                         op=self.op,
+                                         predicate=self.predicate)
+
 
 class ACL(Provisionable):
-    def __init__(self, identifier: Union[str|int], interfaces: List[ACLInterfaceConfig], entries: List[ACE]=None):
+    def __init__(self, identifier: Union[str|int], interfaces: List[ACLInterfaceConfig], entries: List[ACEStandard]=None):
         self.interfaces = interfaces
         self.entries = entries if entries is not None else []
         self.identifier = identifier
@@ -55,31 +86,35 @@ class ACL(Provisionable):
                           self.interfaces))
 
 class NamedACL(ACL):
-    def __init__(self, name: str, interfaces: List[ACLInterfaceConfig], entries: List[ACE]=None):
+    def __init__(self, name: str, interfaces: List[ACLInterfaceConfig], entries: List[ACEStandard]=None, acl_type: str=ACL_TYPE_STANDARD):
         super().__init__(name, interfaces, entries)
+        self.type = acl_type
 
     def provision_entries(self) -> str:
         return reduce(lambda a,x: a+x,
-                      map(lambda a: a.get_modal_named_rule(),
+                      map(lambda a: "\n" + a.provision(), #\
+                                    #+ (named_tcp_extended_return.format(addr=a.get_source().get_ip_addr(),
+                                    #                                   wildcard=a.get_source().get_wildcard_mask())
+                                    #    if isinstance(a, ACEExtended) and a.get_protocol() == PROTOCOL_TCP else ""),
                           self.entries))
 
     def provision(self):
-        return create_named_acl.format(type="standard", name=self.identifier) \
-                + self.provision_entries() + "deny any\n" + self.provision_interfaces()
+        return create_named_acl.format(type=self.type, name=self.identifier) \
+                + self.provision_entries() + total_deny_extended + self.provision_interfaces()
+
 
 class NumberedACL(ACL):
-    def __init__(self, number: int, interfaces: List[ACLInterfaceConfig], entries: List[ACE]=None):
+    def __init__(self, number: int, interfaces: List[ACLInterfaceConfig], entries: List[ACEStandard]=None):
         super().__init__(number, interfaces, entries)
 
     def provision_entries(self) -> str:
         return reduce(lambda a,x: a+x,
-                      map(lambda a: numbered_rule_config.format(
-                              identifier=self.identifier,
-                              rule=a.get_rule(),
-                              ip=a.get_addr(),
-                              wildcard=a.get_wildcard()
-                          ),
-                          self.entries)) + "access-list " + str(self.identifier) + " deny any"
+                      map(lambda a: base_numbered.format(number=self.identifier) + a.provision(), #\
+                                    #+ (numbered_tcp_extended_return.format(number=self.identifier,
+                                    #                                       addr=a.get_source().get_ip_addr(),
+                                    #                                       wildcard=a.get_source().get_wildcard_mask())
+                                    #   if isinstance(a, ACEExtended) and a.get_protocol() == PROTOCOL_TCP else ""),
+                          self.entries)) + base_numbered.format(number=str(self.identifier)) + total_deny_extended
 
 
     def provision(self):

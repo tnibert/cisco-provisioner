@@ -27,6 +27,9 @@ class OSPFv2Network(Provisionable):
             area_id=self.area
         )
 
+    def get_network(self):
+        return self.net_addr
+
 
 class OSPFInterface(Provisionable):
     def __init__(self, intf: str,
