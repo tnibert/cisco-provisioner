@@ -1,6 +1,8 @@
 import socket
 import struct
 
+from exceptions import InvalidConfig
+
 # just a shortcut
 CIDR_CACHE = {
     24: "255.255.255.0",
@@ -47,3 +49,20 @@ class IPv4Address(IPAddress):
 class IPv6Address(IPAddress):
     def __init__(self, ip: str, mask_bits: int=DEFAULT_IPV6_MASK):
         super().__init__(ip, mask_bits)
+
+
+class IPv4Range:
+    def __init__(self, start: IPv4Address, end: IPv4Address):
+        if start.get_mask_len() != end.get_mask_len():
+            raise InvalidConfig()
+        self.start = start
+        self.end = end
+
+    def get_start(self):
+        return self.start
+
+    def get_end(self):
+        return self.end
+
+    def get_mask(self):
+        return self.start.get_mask()

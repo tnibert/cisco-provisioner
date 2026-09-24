@@ -4,7 +4,7 @@ from typing import List, Union
 from ip import IPv4Address
 from provisionable import Provisionable
 from templates.acl import create_named_acl, interface_config, base_standard_rule, base_numbered, base_extended_rule, \
-    total_deny_extended
+    total_deny_extended, total_deny_standard
 from templates.router import INTERFACE_BLOCK
 
 """
@@ -82,12 +82,15 @@ class ACL(Provisionable):
         self.entries = entries if entries is not None else []
         self.identifier = identifier
 
+    def get_identifier(self):
+        return self.identifier
+
     def provision_interfaces(self) -> str:
         return reduce(lambda a,x: a+x,
                       map(lambda i: INTERFACE_BLOCK.format(intf=i.get_intf(),
-                                                           body=interface_config.format(identifier=self.identifier,
+                                                           body=interface_config.format(identifier=self.get_identifier(),
                                                                                         direction=i.get_direction())),
-                          self.interfaces))
+                          self.interfaces), "")
 
 class NamedACL(ACL):
     def __init__(self, name: str, interfaces: List[ACLInterfaceConfig], entries: List[ACEStandard]=None, acl_type: str=ACL_TYPE_STANDARD):
@@ -103,8 +106,8 @@ class NamedACL(ACL):
                           self.entries))
 
     def provision(self):
-        return create_named_acl.format(type=self.type, name=self.identifier) \
-                + self.provision_entries() + total_deny_extended + self.provision_interfaces()
+        return create_named_acl.format(type=self.type, name=self.get_identifier()) \
+                + self.provision_entries() #+ total_deny_extended + self.provision_interfaces()
 
 
 class NumberedACL(ACL):
@@ -113,12 +116,12 @@ class NumberedACL(ACL):
 
     def provision_entries(self) -> str:
         return reduce(lambda a,x: a+x,
-                      map(lambda a: base_numbered.format(number=self.identifier) + a.provision(), #\
+                      map(lambda a: base_numbered.format(number=self.get_identifier()) + a.provision(), #\
                                     #+ (numbered_tcp_extended_return.format(number=self.identifier,
                                     #                                       addr=a.get_source().get_ip_addr(),
                                     #                                       wildcard=a.get_source().get_wildcard_mask())
                                     #   if isinstance(a, ACEExtended) and a.get_protocol() == PROTOCOL_TCP else ""),
-                          self.entries)) + base_numbered.format(number=str(self.identifier)) + total_deny_extended
+                          self.entries)) #+ base_numbered.format(number=str(self.get_identifier())) + total_deny_extended
 
 
     def provision(self):

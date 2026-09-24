@@ -6,3 +6,6 @@ class Unimplemented(Exception):
 
 class InvalidOption(Exception):
     pass
+
+class InvalidConfig(Exception):
+    pass
