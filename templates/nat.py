@@ -17,12 +17,12 @@ ip nat pool {pool_name} {start_addr} {end_addr} netmask {netmask}
 """
 
 bind_acl_pool = """
-ip nat inside source list {acl_identifier} pool {pool_name}
-"""
+ip nat inside source list {acl_identifier} pool {pool_name}"""
 
 # PAT
-pat_setup = """
-ip nat inside source list {acl_identifier} interfaces {intf_type} {intf_number} overload
+# todo: unused
+pat_single_setup = """
+ip nat inside source list {acl_identifier} interface {intf_type} {intf_number} overload
 """
 
 bind_acl_pool_pat = bind_acl_pool + " overload\n"

@@ -33,7 +33,7 @@ class NATAddressPool(Provisionable):
         self.overload = overload
 
     def bind(self):
-        bind_cmd = bind_acl_pool if not self.overload else bind_acl_pool_pat
+        bind_cmd = bind_acl_pool+"\n" if not self.overload else bind_acl_pool_pat
         return bind_cmd.format(acl_identifier=self.acl.get_identifier(), pool_name=self.pool_name)
 
     def provision(self):
@@ -61,11 +61,3 @@ class DynamicNAT(NAT):
 
     def provision(self):
         return self.pool.provision() + self.inside() + self.outside()
-
-
-class PAT(NAT):
-    def __init__(self):
-        pass
-
-    def provision(self):
-        pass
