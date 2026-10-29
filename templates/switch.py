@@ -40,6 +40,10 @@ no shut
 exit
 """
 
+stp_root_bridge = """
+spanning-tree vlan {vlans} root primary
+"""
+
 CONFIG_ACCESS_VLAN = """
 switchport access vlan {access_vlan}
 """
@@ -71,6 +75,7 @@ exit
 """
 
 # todo: unify with other trunk config
+# PAgP
 CONFIG_ETHERCHANNEL_PORTS = """
 ! etherchannel
 interface range {ports}
@@ -81,6 +86,4 @@ switchport mode trunk
 switchport trunk allow vlan {vlans}
 switchport trunk native vlan {native_vlan}
 exit
-show interfaces port-channel {chan_num}
-show etherchannel summary
 """

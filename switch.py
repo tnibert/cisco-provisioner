@@ -1,20 +1,21 @@
 from functools import reduce
 
 from ip import IPAddress
-from templates.switch import SWITCH_SVI_SSH, CONFIG_SWITCH_VLAN
+from templates.switch import SWITCH_SVI_SSH, CONFIG_SWITCH_VLAN, stp_root_bridge
 from device import Device
-from utils import strip_blank_lines
+from utils import strip_blank_lines, partition
 from vlan import Vlan, NativeVlan
 from ports import Ports
 from typing import List, Union
 
 class Switch(Device):
-    def __init__(self, hostname, access_vlan: Vlan, ip: IPAddress, vlans: List[Union[Vlan,NativeVlan]], port_configs: List[Ports]):
+    def __init__(self, hostname, access_vlan: Vlan, ip: IPAddress, vlans: List[Union[Vlan,NativeVlan]], port_configs: List[Ports], spanning_tree_root=False):
         super().__init__(hostname, 15)
         self.access_vlan = access_vlan
         self.ip = ip
         self.port_configs = port_configs if port_configs is not None else []
         self.vlans = vlans if vlans is not None else []
+        self.spanning_tree_root = spanning_tree_root
 
     def provision_ssh(self) -> str:
         if None in (self.access_vlan, self.ip):
@@ -32,10 +33,19 @@ class Switch(Device):
     def provision_switch_vlans(self):
         return reduce(lambda a, x: a + x, [CONFIG_SWITCH_VLAN.format(number=v.get_number(), name=v.get_name()) for v in self.vlans], "")
 
+    def provision_stp_root_bridge(self):
+        if self.spanning_tree_root:
+            regular_vlans, native_vlans = partition(lambda v: not isinstance(v, NativeVlan), self.vlans)
+            regular_vlans_str = reduce(lambda a, x: a + "," + x, map(lambda v: str(v.get_number()), regular_vlans))
+            return stp_root_bridge.format(vlans=regular_vlans_str)
+        else:
+            return ""
+
     def provision(self) -> str:
         return strip_blank_lines(
             self.provision_basic() \
             + self.provision_switch_vlans() \
             + self.provision_ssh() \
-            + self.provision_switch_ports()
+            + self.provision_switch_ports() \
+            + self.provision_stp_root_bridge()
         )
