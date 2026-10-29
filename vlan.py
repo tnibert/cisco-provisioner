@@ -3,12 +3,11 @@ from templates.switch import CONFIG_TRUNK_NATIVE
 from typing import Union
 
 class Vlan:
-    def __init__(self, name: str, number: int, ipv4: IPAddress=None, router_port=None, ipv6: IPAddress=None, dhcp: bool=False):
+    def __init__(self, name: str, number: int, ipv4: IPAddress=None, ipv6: IPAddress=None, dhcp: bool=False):
         self.name = name
         self.number = number
         self.ipv4_gateway = ipv4
         self.ipv6_gateway = ipv6
-        self.router_port = router_port
         self.dhcp_enabled = dhcp
 
     def get_number(self) -> int:
