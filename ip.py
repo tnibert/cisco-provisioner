@@ -1,5 +1,6 @@
 import socket
 import struct
+import ipaddress
 
 from exceptions import InvalidConfig
 
@@ -39,6 +40,28 @@ class IPAddress:
 
 
 class IPv4Address(IPAddress):
+    def __init__(self, ip: str, mask_bits: int):
+        super().__init__(ip, mask_bits)
+        try:
+            self.net_addr = ipaddress.ip_network('{}/{}'.format(ip, mask_bits))
+        except ValueError:
+            self.net_addr = None
+
+    def get_first_host(self):
+        return self.hosts()[0]
+
+    def get_last_host(self):
+        return self.hosts()[-1]
+
+    # todo: confirm order is reliable
+    def hosts(self):
+        if self.net_addr is None:
+            return [self]
+        return list(map(lambda h: IPv4Address(str(h), self.mask), self.net_addr.hosts()))
+
+    def to_range(self):
+        return IPv4Range(self.get_first_host(), self.get_last_host())
+
     def get_mask(self) -> str:
         return cidr_prefix_to_netmask(self.mask)
 

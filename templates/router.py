@@ -26,6 +26,12 @@ ip address {addr} {mask}
 exit
 """
 
+CONFIG_LOOPBACK_IPV6 = """
+interface loopback {number}
+ipv6 address {ipv6}
+exit
+"""
+
 CONFIG_ROUTER_ON_A_STICK_BLOCK = """
 int {port}.{vlan}
 encapsulation dot1q {vlan}

@@ -7,14 +7,14 @@ from provisionable import provision_group, Provisionable
 from templates.dhcp import DHCP_V6_SERVER_CREATE
 from templates.router import (CONFIG_IPV4_PORT, CONFIG_IPV6_PORT, CONFIG_IPV6_LINK_LOCAL, DCE,
                               CONFIG_ROUTER_ON_A_STICK_BLOCK, CONFIG_NATIVE_ROUTER_ON_A_STICK_BLOCK,
-                              CONFIG_LOOPBACK_IPV4, INTERFACE_BLOCK, ENABLE_IPV6)
+                              CONFIG_LOOPBACK_IPV4, INTERFACE_BLOCK, ENABLE_IPV6, CONFIG_LOOPBACK_IPV6)
 from templates.common import PORT_NO_SHUT
 from device import Device
 from utils import strip_blank_lines, partition
 from vlan import VlanUnion, NativeVlan
 from routes import StaticRoute
 from exceptions import Unimplemented
-from ip import IPAddress
+from ip import IPAddress, IPv4Address, IPv6Address
 from typing import List, Union
 
 class BasePort:
@@ -101,16 +101,18 @@ class RouterOnAStickPort(BasePort):
             + INTERFACE_BLOCK.format(intf=self.intf, body=PORT_NO_SHUT)
 
 
-class IPv4LoopbackPort:
-    def __init__(self, ip: IPAddress, number: int):
-        self.ip = ip
+class LoopbackPort(Provisionable):
+    def __init__(self, ipv4: IPv4Address, number: int, ipv6: IPv6Address=None):
+        self.ipv4 = ipv4
+        self.ipv6 = ipv6
         self.number = number
 
     def provision(self):
-        return CONFIG_LOOPBACK_IPV4.format(number=self.number, addr=self.ip.get_ip_addr(), mask=self.ip.get_mask())
+        return CONFIG_LOOPBACK_IPV4.format(number=self.number, addr=self.ipv4.get_ip_addr(), mask=self.ipv4.get_mask()) + \
+            (CONFIG_LOOPBACK_IPV6.format(number=self.number, ipv6=self.ipv6.get_cidr()) if self.ipv6 is not None else "")
 
 
-PortUnion = Union[BasePort | IPv4LoopbackPort]
+PortUnion = Union[BasePort | LoopbackPort]
 
 class Router(Device):
     def __init__(self, hostname: str,
@@ -119,14 +121,14 @@ class Router(Device):
                  dhcp_servers: List[DHCPServer]=None,
                  dynamic_routing: List[Provisionable]=None,
                  acls: List[ACL]=None,
-                 nat: NAT=None):
+                 nat: List[NAT]=None):
         super().__init__(hostname, 4)
         self.ports = ports if ports is not None else []
         self.routes = routes if routes is not None else []
         self.dhcp_servers = dhcp_servers if dhcp_servers is not None else []
         self.dynamic_routing = dynamic_routing if dynamic_routing is not None else []
         self.acls = acls if acls is not None else []
-        self.nat = nat
+        self.nat = nat if nat is not None else []
 
     def provision_ports(self):
         return provision_group(self.ports)
@@ -144,7 +146,7 @@ class Router(Device):
         return provision_group(self.acls)
 
     def provision_nat(self):
-        return self.nat.provision() if self.nat is not None else ""
+        return provision_group(self.nat)
 
     def provision(self) -> str:
         return strip_blank_lines(
